@@ -40,13 +40,13 @@ g1-mujoco-ros2/
 
 ## Setup
 
-### 1. Clone dependencies
+### 1. Initialise submodules
 
 ```bash
-# Unitree MuJoCo simulator
-git clone https://github.com/unitreerobotics/unitree_mujoco ~/Projects/unitree_mujoco
+# Unitree repos are included as submodules — initialise them after cloning
+git submodule update --init --recursive
 
-# Unitree ROS2 messages (v0.3.0+)
+# Unitree ROS2 messages (v0.3.0+) — still a separate clone into the workspace
 cd ~/ros2_ws/src
 git clone https://github.com/unitreerobotics/unitree_ros2
 
@@ -59,7 +59,7 @@ colcon build
 
 ```bash
 cp mujoco_scene/scene_29dof.xml \
-   ~/Projects/unitree_mujoco/unitree_robots/g1/scene_29dof.xml
+   ~/Projects/g1-mujoco-ros2/unitree_mujoco/unitree_robots/g1/scene_29dof.xml
 ```
 
 ### 3. Build the g1_sim package
@@ -78,7 +78,7 @@ colcon build --packages-select g1_sim
 ### Terminal 1 — MuJoCo simulator
 
 ```bash
-cd ~/Projects/unitree_mujoco/simulate_python
+cd ~/Projects/g1-mujoco-ros2/unitree_mujoco/simulate_python
 
 # Force X11 (required on Ubuntu 22.04 Wayland for interactive viewer)
 DISPLAY=:1.0 env -u WAYLAND_DISPLAY python3 unitree_mujoco.py

@@ -8,7 +8,7 @@ Usage:
   ros2 launch g1_sim g1_sim.launch.py
 
 Start the Python simulator first in a separate terminal:
-  cd ~/Projects/unitree_mujoco/simulate_python
+  cd ~/Projects/g1-mujoco-ros2/unitree_mujoco/simulate_python
   python3 unitree_mujoco.py
 """
 
