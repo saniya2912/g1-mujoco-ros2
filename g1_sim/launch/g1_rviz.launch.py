@@ -24,7 +24,9 @@ from launch_ros.actions import Node
 CYCLONEDDS_URI = (
     '<CycloneDDS><Domain><General><Interfaces>'
     '<NetworkInterface name="lo" priority="default" multicast="default"/>'
-    '</Interfaces></General></Domain></CycloneDDS>'
+    '</Interfaces></General>'
+    '<Discovery><MaxAutoParticipantIndex>50</MaxAutoParticipantIndex></Discovery>'
+    '</Domain></CycloneDDS>'
 )
 
 DEFAULT_URDF = str(
@@ -40,6 +42,14 @@ def launch_nodes(context, *args, **kwargs):
 
     with open(urdf_path) as f:
         robot_description = f.read()
+
+    # URDF uses bare relative paths (e.g. meshes/pelvis.STL) with no package:// prefix.
+    # Rewrite them to absolute file:// URIs so RViz can find the STL files.
+    mesh_dir = str(Path(urdf_path).parent / "meshes")
+    robot_description = robot_description.replace(
+        'filename="meshes/',
+        f'filename="file://{mesh_dir}/',
+    )
 
     return [
         Node(

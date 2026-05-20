@@ -20,7 +20,9 @@ from launch.actions import SetEnvironmentVariable
 CYCLONEDDS_URI = (
     '<CycloneDDS><Domain><General><Interfaces>'
     '<NetworkInterface name="lo" priority="default" multicast="default"/>'
-    '</Interfaces></General></Domain></CycloneDDS>'
+    '</Interfaces></General>'
+    '<Discovery><MaxAutoParticipantIndex>50</MaxAutoParticipantIndex></Discovery>'
+    '</Domain></CycloneDDS>'
 )
 
 
