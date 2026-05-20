@@ -261,6 +261,42 @@ All topics use CycloneDDS on loopback (`lo`), domain ID 1. The bridge maps each 
 
 ---
 
+## Inspecting the Node Graph
+
+Use `rqt_graph` to visualise nodes, topics, publishers, and subscribers.
+**Export the DDS variables before running** — inline assignment breaks the XML:
+
+```bash
+source ~/Projects/ros2_ws/install/setup.bash
+export ROS_DOMAIN_ID=1
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI='<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo" priority="default" multicast="default"/></Interfaces></General><Discovery><MaxAutoParticipantIndex>50</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>'
+
+DISPLAY=:1.0 XAUTHORITY=/run/user/1000/.mutter-Xwaylandauth.BZIMP3 \
+  env -u WAYLAND_DISPLAY rqt_graph
+```
+
+In the window set the dropdown to **Nodes/Topics (all)**. Expected graph:
+
+```
+[unitree_mujoco*] ──/lowstate──▶ [g1_stand_demo]
+                               ──/lowstate──▶ [joint_state_bridge]
+[g1_stand_demo]   ──/lowcmd───▶ [unitree_mujoco*]
+[joint_state_bridge] ──/joint_states──▶ [robot_state_publisher]
+                     ──/tf_static─────▶ [rviz2]
+[robot_state_publisher] ──/tf──────────▶ [rviz2 / transform_listener_impl]
+                        ──/tf_static───▶ [rviz2 / transform_listener_impl]
+                        ──/robot_description──▶ [rviz2]
+```
+
+`*` The MuJoCo simulator is not a ROS2 node — it appears as an anonymous DDS
+participant, not a named oval. `transform_listener_impl` is rviz2's internal
+TF2 listener sub-node — it is part of rviz2, not a separate process. RViz does
+not subscribe to `/joint_states` directly; `robot_state_publisher` converts
+joint states to TF and rviz2 consumes only the TF output.
+
+---
+
 ## Verifying the Pipeline
 
 ```bash
