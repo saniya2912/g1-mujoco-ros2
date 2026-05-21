@@ -30,7 +30,19 @@ ament_target_dependencies(stand_g1
   std_msgs
 )
 
-install(TARGETS stand_g1
+add_executable(wave_g1
+  src/wave_g1.cpp
+  src/motor_crc_hg.cpp
+)
+
+ament_target_dependencies(wave_g1
+  unitree_hg
+  unitree_api
+  rclcpp
+  std_msgs
+)
+
+install(TARGETS stand_g1 wave_g1
   DESTINATION lib/${PROJECT_NAME}
 )
 

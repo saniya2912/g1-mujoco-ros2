@@ -126,6 +126,22 @@ echo "source ~/Projects/ros2_ws/install/setup.bash" >> ~/.bashrc
 Open three terminals. Source `~/Projects/ros2_ws/install/setup.bash` in terminals 2 and 3 if you
 did not add it to `~/.bashrc`.
 
+### Pre-flight (every session)
+
+```bash
+# 1. Kill any leftover processes from a previous run (prevents DDS participant exhaustion)
+pkill -9 -f "unitree_mujoco|stand_g1|rviz2|joint_state_bridge" 2>/dev/null
+
+# 2. Find the current XWayland auth cookie (suffix changes on every login)
+ls /run/user/1000/.mutter-Xwaylandauth.*
+```
+
+Use the path printed by step 2 for the `XAUTHORITY=` values in Terminals 1 and 3
+below.
+
+If you have edited any C++ source under `g1_sim/src/` since the last build, also
+force a clean rebuild — see step 5 of [One-Time Setup](#5-build-the-g1_sim-package).
+
 ### Terminal 1 — MuJoCo simulator
 
 ```bash
@@ -194,6 +210,70 @@ while the stand demo runs.
 | — | hold | Maintain upright pose indefinitely |
 
 PD gains: legs `kp=100, kd=2.5` · waist `kp=60, kd=1.5` · arms `kp=40, kd=1.0`
+
+---
+
+## RL Walking Demo (unitree_rl_gym)
+
+A standalone alternative to the ROS2 stack above: Unitree's own RL repo ships a
+pretrained 12-DOF leg policy that makes the G1 stand on its own feet and walk
+forward in a MuJoCo viewer. **No ROS2, no DDS, no elastic band** — the policy
+actively balances and supports the full 35 kg of robot weight on the feet.
+
+> This is a separate process tree from the ROS2 demo. It opens its own MuJoCo
+> viewer and does not produce `/lowstate` or `/lowcmd`. If `unitree_mujoco.py`
+> is already running, kill it first or you'll fight for the GPU.
+
+### One-time setup
+
+The repo is already cloned at `unitree_rl_gym/`. Verify Python deps:
+
+```bash
+python3 -c 'import torch, mujoco, yaml; print(torch.__version__, mujoco.__version__)'
+# Should print something like:  2.4.0+cu121 3.8.1
+```
+
+No `pip install` needed — we pass the repo on `PYTHONPATH` at runtime, which
+avoids pulling in Isaac Gym (a training-only dependency).
+
+### Run
+
+```bash
+pkill -9 -f "unitree_mujoco|stand_g1|wave_g1|rviz2|joint_state_bridge" 2>/dev/null
+
+cd ~/Projects/g1-mujoco-ros2/unitree_rl_gym
+
+PYTHONPATH=$PWD \
+  DISPLAY=:1.0 XAUTHORITY=/run/user/1000/.mutter-Xwaylandauth.* \
+  env -u WAYLAND_DISPLAY \
+  python3 deploy/deploy_mujoco/deploy_mujoco.py g1.yaml
+```
+
+(Replace the `XAUTHORITY` glob with the actual file — same X11 setup as
+[Terminal 1](#terminal-1--mujoco-simulator).)
+
+Default behaviour: viewer opens with a zoomed-out camera (`distance=5 m`,
+lookat `[0, 0, 1]`), the G1 stands on its 12 leg joints, then **walks forward
+at 0.5 m/s for 60 seconds**.
+
+### Tunable knobs — `deploy/deploy_mujoco/configs/g1.yaml`
+
+| Key | Default | Effect |
+|---|---|---|
+| `cmd_init` | `[0.5, 0, 0]` | `[vx, vy, omega]` velocity command. Set to `[0, 0, 0]` to stand in place. |
+| `simulation_duration` | `60.0` | Seconds before viewer auto-closes. |
+| `kps` / `kds` | per-joint PD | Already tuned for this policy — don't touch unless retraining. |
+| `policy_path` | `pre_train/g1/motion.pt` | Swap in your own `.pt` checkpoint from a retraining run. |
+
+### What this demo does *not* do
+
+- **Arms / waist** — the policy controls only the 12 leg DOFs. The 17 upper-body
+  joints aren't in the `g1_12dof.xml` scene the demo loads.
+- **ROS2 publishing** — the policy talks directly to `mj_data.ctrl`. If you want
+  `/joint_states` in RViz from this demo, you'd have to write a bridge node that
+  reads MuJoCo state and republishes. Out of scope here.
+- **Custom worlds / obstacles** — the scene is `resources/robots/g1_description/scene.xml`,
+  separate from `unitree_mujoco/unitree_robots/g1/scene.xml`.
 
 ---
 

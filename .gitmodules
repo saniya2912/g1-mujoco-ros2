@@ -10,3 +10,12 @@
 [submodule "unitree_sdk2_python"]
 	path = unitree_sdk2_python
 	url = https://github.com/unitreerobotics/unitree_sdk2_python.git
+[submodule "g1pilot"]
+	path = g1pilot
+	url = https://github.com/hucebot/g1pilot.git
+[submodule "unitree_rl_gym"]
+	path = unitree_rl_gym
+	url = https://github.com/unitreerobotics/unitree_rl_gym.git
+[submodule "unitree_g1_vibes"]
+	path = unitree_g1_vibes
+	url = https://github.com/Sentdex/unitree_g1_vibes.git
